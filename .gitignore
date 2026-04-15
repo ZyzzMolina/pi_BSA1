@@ -9,19 +9,16 @@ node_modules/
 .env.*
 !.env.example
 !.env.sample
-
 # Logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
 # Build artifacts
 dist/
 build/
 coverage/
-
 # OS / Editor
 .DS_Store
 Thumbs.db
