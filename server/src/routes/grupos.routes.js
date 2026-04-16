@@ -8,7 +8,7 @@ router.use(authenticateToken);
 
 router.get('/', ctrl.getAll);
 router.get('/:id', ctrl.getById);
-router.get('/docente/:id', ctrl.getByDocente);
+router.get('/docente/:id', authorizeRole('admin', 'docente'), ctrl.getByDocente);
 router.post('/', authorizeRole('admin'), ctrl.create);
 router.put('/:id', authorizeRole('admin'), ctrl.update);
 router.delete('/:id', authorizeRole('admin'), ctrl.remove);

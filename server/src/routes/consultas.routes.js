@@ -6,20 +6,20 @@ const router = Router();
 
 router.use(authenticateToken);
 
-// Dashboard stats
-router.get('/stats', ctrl.dashboardStats);
+// Dashboard stats (solo admin)
+router.get('/stats', authorizeRole('admin'), ctrl.dashboardStats);
 
-// Consultas obligatorias
-router.get('/historial/:id', ctrl.historialAlumno);
-router.get('/promedios', ctrl.promediosPorAlumno);
-router.get('/promedio-superior', ctrl.alumnosPromedioSuperior);
-router.get('/reprobados', ctrl.alumnosReprobados);
+// Consultas obligatorias (solo admin)
+router.get('/historial/:id', authorizeRole('admin', 'alumno'), ctrl.historialAlumno);
+router.get('/promedios', authorizeRole('admin'), ctrl.promediosPorAlumno);
+router.get('/promedio-superior', authorizeRole('admin'), ctrl.alumnosPromedioSuperior);
+router.get('/reprobados', authorizeRole('admin'), ctrl.alumnosReprobados);
 
-// Consulta PLUS (HAVING)
-router.get('/materias-mejor-promedio', ctrl.materiasMejorPromedio);
+// Consulta PLUS (HAVING) - solo admin
+router.get('/materias-mejor-promedio', authorizeRole('admin'), ctrl.materiasMejorPromedio);
 
-// Vistas
-router.get('/vista-historial', ctrl.vistaHistorial);
-router.get('/vista-promedios', ctrl.vistaPromedios);
+// Vistas (admin y alumno pueden ver sus promedios)
+router.get('/vista-historial', authorizeRole('admin'), ctrl.vistaHistorial);
+router.get('/vista-promedios', authorizeRole('admin', 'alumno', 'docente'), ctrl.vistaPromedios);
 
 export default router;

@@ -81,6 +81,12 @@ export const remove = async (req, res) => {
 export const getByDocente = async (req, res) => {
     try {
         const { id } = req.params;
+        
+        // Validar que el docente solo vea sus propios grupos
+        if (req.user.role === 'docente' && req.user.id_docente != id) {
+            return res.status(403).json({ error: 'No puedes ver los grupos de otro docente' });
+        }
+        
         const result = await pool.query(`
       SELECT g.*, m.nombre AS materia_nombre, m.clave
       FROM grupos g

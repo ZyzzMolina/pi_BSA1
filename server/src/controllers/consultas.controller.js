@@ -4,6 +4,12 @@ import pool from '../config/db.js';
 export const historialAlumno = async (req, res) => {
     try {
         const { id } = req.params;
+        
+        // Validar que el alumno solo vea su propio historial
+        if (req.user.role === 'alumno' && req.user.id_alumno != id) {
+            return res.status(403).json({ error: 'No puedes ver el historial de otro alumno' });
+        }
+        
         const result = await pool.query(`
       SELECT
         a.nombre || ' ' || a.apellido AS alumno,
@@ -140,7 +146,18 @@ export const vistaHistorial = async (req, res) => {
 // Vista: promedios
 export const vistaPromedios = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM vista_promedios ORDER BY promedio DESC');
+        let query = 'SELECT * FROM vista_promedios';
+        const params = [];
+        
+        // Si es alumno, solo ver su propio promedio
+        if (req.user.role === 'alumno') {
+            query += ' WHERE id_alumno = $1';
+            params.push(req.user.id_alumno);
+        }
+        
+        query += ' ORDER BY promedio DESC';
+        
+        const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {
         console.error('Error:', err);

@@ -86,6 +86,18 @@ export const remove = async (req, res) => {
 export const getByGrupo = async (req, res) => {
     try {
         const { id } = req.params;
+        
+        // Si es docente, validar que es el dueño del grupo
+        if (req.user.role === 'docente') {
+            const grupoCheck = await pool.query('SELECT id_docente FROM grupos WHERE id_grupo = $1', [id]);
+            if (grupoCheck.rows.length === 0) {
+                return res.status(404).json({ error: 'Grupo no encontrado' });
+            }
+            if (grupoCheck.rows[0].id_docente !== req.user.id_docente) {
+                return res.status(403).json({ error: 'No puedes ver las calificaciones de este grupo' });
+            }
+        }
+        
         const result = await pool.query(`
       SELECT c.*, a.id_alumno, a.nombre || ' ' || a.apellido AS alumno_nombre, i.id_inscripcion
       FROM calificaciones c
