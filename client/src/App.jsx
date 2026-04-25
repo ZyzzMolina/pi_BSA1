@@ -11,6 +11,7 @@ import GruposPage from './pages/admin/GruposPage';
 import InscripcionesPage from './pages/admin/InscripcionesPage';
 import CalificacionesPage from './pages/admin/CalificacionesPage';
 import ConsultasPage from './pages/admin/ConsultasPage';
+import PeriodosDocentePage from './pages/admin/PeriodosDocentePage';
 import DocenteDashboard from './pages/docente/DocenteDashboard';
 import AlumnoDashboard from './pages/alumno/AlumnoDashboard';
 
@@ -34,6 +35,7 @@ function App() {
             <Route path="grupos" element={<GruposPage />} />
             <Route path="inscripciones" element={<InscripcionesPage />} />
             <Route path="calificaciones" element={<CalificacionesPage />} />
+            <Route path="periodos-docentes" element={<PeriodosDocentePage />} />
             <Route path="consultas" element={<ConsultasPage />} />
           </Route>
 

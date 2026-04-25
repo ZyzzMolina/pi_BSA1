@@ -100,3 +100,25 @@ export const getByDocente = async (req, res) => {
         res.status(500).json({ error: 'Error al obtener grupos del docente' });
     }
 };
+
+export const getAlumnosByGrupo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(`
+      SELECT 
+        i.id_inscripcion,
+        a.id_alumno,
+        a.nombre || ' ' || a.apellido AS alumno_nombre,
+        i.id_grupo
+      FROM inscripciones i
+      JOIN alumnos a ON i.id_alumno = a.id_alumno
+      WHERE i.id_grupo = $1
+      ORDER BY a.apellido, a.nombre
+    `, [id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error:', err);
+        res.status(500).json({ error: 'Error al obtener alumnos del grupo' });
+    }
+};

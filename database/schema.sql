@@ -5,15 +5,16 @@
 -- Base de Datos Avanzadas — Proyecto Final
 -- ============================================================
 -- Motor: PostgreSQL 15+
+-- Encoding: UTF-8
 -- Ejecutar como superusuario (postgres)
 -- ============================================================
 
 -- ============================
 -- 0. CREAR BASE DE DATOS
 -- ============================
--- DROP DATABASE IF EXISTS sistema_academico;
--- CREATE DATABASE sistema_academico;
--- \c sistema_academico
+-- DROP DATABASE IF EXISTS sistema_academico_db;
+-- CREATE DATABASE sistema_academico_db ENCODING 'UTF8' LC_COLLATE 'es_ES.UTF-8' LC_CTYPE 'es_ES.UTF-8';
+-- \c sistema_academico_db
 
 -- ============================
 -- 1. LIMPIEZA PREVIA
@@ -30,6 +31,7 @@ DROP VIEW IF EXISTS vista_promedios CASCADE;
 
 DROP TABLE IF EXISTS calificaciones CASCADE;
 DROP TABLE IF EXISTS inscripciones CASCADE;
+DROP TABLE IF EXISTS periodos_docente CASCADE;
 DROP TABLE IF EXISTS grupos CASCADE;
 DROP TABLE IF EXISTS materias CASCADE;
 DROP TABLE IF EXISTS docentes CASCADE;
@@ -60,6 +62,17 @@ CREATE TABLE docentes (
     telefono    VARCHAR(20),
     especialidad VARCHAR(100),
     created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla: periodos_docente
+CREATE TABLE periodos_docente (
+    id_periodo_docente SERIAL   PRIMARY KEY,
+    id_docente         INT      NOT NULL REFERENCES docentes(id_docente) ON DELETE CASCADE,
+    periodo            VARCHAR(20) NOT NULL,          -- Ej: 'Parcial 1', 'Parcial 2', 'Final'
+    activo             BOOLEAN  DEFAULT TRUE,
+    fecha_activacion   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(id_docente, periodo)                      -- Un docente no puede tener el mismo período duplicado
 );
 
 -- Tabla: materias
@@ -115,6 +128,10 @@ CREATE INDEX idx_alumnos_email ON alumnos(email);
 
 -- Índice en docentes.email: Mismo caso que alumnos, se busca por email al autenticarse.
 CREATE INDEX idx_docentes_email ON docentes(email);
+
+-- Índice en periodos_docente(id_docente): Se usa para obtener todos los períodos activados
+-- para un docente específico.
+CREATE INDEX idx_periodos_docente ON periodos_docente(id_docente);
 
 -- Índice en inscripciones(id_alumno): Se usa frecuentemente en JOINs para
 -- obtener el historial de un alumno. Acelera las consultas de historial y promedio.
@@ -283,45 +300,140 @@ INSERT INTO calificaciones (id_inscripcion, calificacion, periodo_eval, fecha_re
 -- Alumno 1: inscripciones 1, 2, 3
 (1, 92.50, 'Parcial 1', '2026-02-15', 'Excelente desempeño'),
 (1, 88.00, 'Parcial 2', '2026-03-15', 'Buen trabajo'),
-(1, 95.00, 'Final', '2026-04-15', 'Sobresaliente'),
+(1, 94.00, 'Parcial 3', '2026-04-15', 'Excelente desempeño continuado'),
 (2, 78.00, 'Parcial 1', '2026-02-15', 'Puede mejorar'),
 (2, 85.50, 'Parcial 2', '2026-03-15', 'Mejora notable'),
+(2, 86.00, 'Parcial 3', '2026-04-15', 'Mejora continua'),
 (3, 90.00, 'Parcial 1', '2026-02-15', 'Muy bien'),
+(3, 91.50, 'Parcial 2', '2026-03-15', 'Buen trabajo'),
+(3, 92.00, 'Parcial 3', '2026-04-15', 'Muy bien'),
 -- Alumno 2: inscripciones 4, 5, 6
 (4, 65.00, 'Parcial 1', '2026-02-15', 'Necesita refuerzo'),
 (4, 70.00, 'Parcial 2', '2026-03-15', 'Mejoró ligeramente'),
+(4, 78.00, 'Parcial 3', '2026-04-15', 'Aprobado'),
 (5, 55.00, 'Parcial 1', '2026-02-15', 'Bajo rendimiento'),
 (5, 60.00, 'Parcial 2', '2026-03-15', 'Sigue bajo'),
+(5, 68.00, 'Parcial 3', '2026-04-15', 'Mejoró'),
 (6, 72.00, 'Parcial 1', '2026-02-15', 'Aceptable'),
+(6, 78.50, 'Parcial 2', '2026-03-15', 'Buen progreso'),
+(6, 81.00, 'Parcial 3', '2026-04-15', 'Buen trabajo'),
 -- Alumno 3: inscripciones 7, 8, 9
 (7, 45.00, 'Parcial 1', '2026-02-15', 'Reprobado'),
 (7, 50.00, 'Parcial 2', '2026-03-15', 'Mejoró pero insuficiente'),
+(7, 65.00, 'Parcial 3', '2026-04-15', 'Aprobado apenas'),
 (8, 88.00, 'Parcial 1', '2026-02-15', 'Buen desempeño'),
+(8, 91.00, 'Parcial 2', '2026-03-15', 'Excelente'),
+(8, 95.00, 'Parcial 3', '2026-04-15', 'Excelente'),
 (9, 30.00, 'Parcial 1', '2026-02-15', 'Muy bajo'),
+(9, 42.00, 'Parcial 2', '2026-03-15', 'Ligeramente mejorado'),
+(9, 55.00, 'Parcial 3', '2026-04-15', 'Bajo pero mejoró'),
 -- Alumno 4: inscripciones 10, 11, 12
 (10, 98.00, 'Parcial 1', '2026-02-15', 'Excelente'),
 (10, 100.00, 'Parcial 2', '2026-03-15', 'Perfecto'),
+(10, 99.00, 'Parcial 3', '2026-04-15', 'Sobresaliente'),
 (11, 75.00, 'Parcial 1', '2026-02-15', 'Aceptable'),
+(11, 79.50, 'Parcial 2', '2026-03-15', 'Buen avance'),
+(11, 83.00, 'Parcial 3', '2026-04-15', 'Buen avance'),
 (12, 82.00, 'Parcial 1', '2026-02-15', 'Bien'),
+(12, 85.00, 'Parcial 2', '2026-03-15', 'Buen desempeño'),
+(12, 88.00, 'Parcial 3', '2026-04-15', 'Muy bien'),
 -- Alumno 5: inscripciones 13, 14, 15
 (13, 40.00, 'Parcial 1', '2026-02-15', 'Reprobado'),
+(13, 50.00, 'Parcial 2', '2026-03-15', 'Mejoró ligeramente'),
+(13, 70.00, 'Parcial 3', '2026-04-15', 'Aprobado'),
 (14, 58.00, 'Parcial 1', '2026-02-15', 'Bajo'),
+(14, 65.00, 'Parcial 2', '2026-03-15', 'Mejoró'),
+(14, 75.00, 'Parcial 3', '2026-04-15', 'Buen trabajo'),
 (15, 62.00, 'Parcial 1', '2026-02-15', 'Regular'),
+(15, 70.00, 'Parcial 2', '2026-03-15', 'Progreso'),
+(15, 79.00, 'Parcial 3', '2026-04-15', 'Aceptable'),
 -- Alumno 6: inscripciones 16, 17, 18
 (16, 91.00, 'Parcial 1', '2026-02-15', 'Muy bien'),
+(16, 92.00, 'Parcial 2', '2026-03-15', 'Excelente trabajo'),
+(16, 93.00, 'Parcial 3', '2026-04-15', 'Muy bien'),
 (17, 85.00, 'Parcial 1', '2026-02-15', 'Buen trabajo'),
+(17, 86.50, 'Parcial 2', '2026-03-15', 'Buen desempeño'),
+(17, 87.00, 'Parcial 3', '2026-04-15', 'Buen desempeño'),
 (18, 78.00, 'Parcial 1', '2026-02-15', 'Aceptable'),
--- Alumno 7-12
+(18, 81.00, 'Parcial 2', '2026-03-15', 'Buen progreso'),
+(18, 84.00, 'Parcial 3', '2026-04-15', 'Aceptable'),
+-- Alumno 7: inscripciones 19, 20, 21
 (19, 69.00, 'Parcial 1', '2026-02-15', 'Necesita mejorar'),
+(19, 73.00, 'Parcial 2', '2026-03-15', 'Mejora'),
+(19, 76.00, 'Parcial 3', '2026-04-15', 'Mejoró'),
 (20, 55.00, 'Parcial 1', '2026-02-15', 'Bajo rendimiento'),
+(20, 60.50, 'Parcial 2', '2026-03-15', 'Ligera mejora'),
+(20, 68.00, 'Parcial 3', '2026-04-15', 'Bajo pero aprobado'),
 (21, 73.00, 'Parcial 1', '2026-02-15', 'Regular'),
+(21, 76.50, 'Parcial 2', '2026-03-15', 'Progreso'),
+(21, 80.00, 'Parcial 3', '2026-04-15', 'Buen trabajo'),
+-- Alumno 8: inscripciones 22, 23, 24
 (22, 96.00, 'Parcial 1', '2026-02-15', 'Excelente'),
+(22, 97.50, 'Parcial 2', '2026-03-15', 'Sobresaliente'),
+(22, 98.00, 'Parcial 3', '2026-04-15', 'Excelente'),
 (23, 81.00, 'Parcial 1', '2026-02-15', 'Buen desempeño'),
+(23, 83.50, 'Parcial 2', '2026-03-15', 'Buen avance'),
+(23, 86.00, 'Parcial 3', '2026-04-15', 'Buen desempeño'),
 (24, 44.00, 'Parcial 1', '2026-02-15', 'Reprobado'),
+(24, 52.00, 'Parcial 2', '2026-03-15', 'Ligera mejora'),
+(24, 62.00, 'Parcial 3', '2026-04-15', 'Aprobado'),
+-- Alumno 9: inscripciones 25, 26, 27
 (25, 77.00, 'Parcial 1', '2026-02-15', 'Aceptable'),
+(25, 80.50, 'Parcial 2', '2026-03-15', 'Buen trabajo'),
+(25, 85.00, 'Parcial 3', '2026-04-15', 'Buen trabajo'),
 (26, 63.00, 'Parcial 1', '2026-02-15', 'Regular'),
+(26, 68.50, 'Parcial 2', '2026-03-15', 'Mejora'),
+(26, 74.00, 'Parcial 3', '2026-04-15', 'Aceptable'),
 (27, 89.00, 'Parcial 1', '2026-02-15', 'Muy bien'),
-(28, 71.00, 'Parcial 1', '2026-02-15', 'Aceptable');
+(27, 92.50, 'Parcial 2', '2026-03-15', 'Excelente'),
+(27, 96.00, 'Parcial 3', '2026-04-15', 'Excelente'),
+-- Alumno 10: inscripciones 28, 29, 30
+(28, 71.00, 'Parcial 1', '2026-02-15', 'Aceptable'),
+(28, 75.50, 'Parcial 2', '2026-03-15', 'Progreso'),
+(28, 82.00, 'Parcial 3', '2026-04-15', 'Buen desempeño');
+
+-- ---- PERIODOS_DOCENTE (Períodos activados por docente) ----
+INSERT INTO periodos_docente (id_docente, periodo, activo) VALUES
+-- Dr. Ricardo Vega (id_docente 1)
+(1, 'Parcial 1', TRUE),
+(1, 'Parcial 2', TRUE),
+(1, 'Parcial 3', TRUE),
+-- Dra. Patricia Luna (id_docente 2)
+(2, 'Parcial 1', TRUE),
+(2, 'Parcial 2', TRUE),
+(2, 'Parcial 3', TRUE),
+-- Dr. Enrique Soto (id_docente 3)
+(3, 'Parcial 1', TRUE),
+(3, 'Parcial 2', FALSE),
+(3, 'Parcial 3', TRUE),
+-- Mtra. Laura Navarro (id_docente 4)
+(4, 'Parcial 1', TRUE),
+(4, 'Parcial 2', TRUE),
+(4, 'Parcial 3', TRUE),
+-- Dr. Francisco Campos (id_docente 5)
+(5, 'Parcial 1', TRUE),
+(5, 'Parcial 2', FALSE),
+(5, 'Parcial 3', FALSE),
+-- Dra. Carmen Delgado (id_docente 6)
+(6, 'Parcial 1', TRUE),
+(6, 'Parcial 2', TRUE),
+(6, 'Parcial 3', TRUE),
+-- Mtro. Jorge Ríos (id_docente 7)
+(7, 'Parcial 1', TRUE),
+(7, 'Parcial 2', TRUE),
+(7, 'Parcial 3', TRUE),
+-- Dra. Elena Guerrero (id_docente 8)
+(8, 'Parcial 1', TRUE),
+(8, 'Parcial 2', FALSE),
+(8, 'Parcial 3', TRUE),
+-- Dr. Manuel Ibarra (id_docente 9)
+(9, 'Parcial 1', TRUE),
+(9, 'Parcial 2', TRUE),
+(9, 'Parcial 3', TRUE),
+-- Mtra. Rosa Espinoza (id_docente 10)
+(10, 'Parcial 1', TRUE),
+(10, 'Parcial 2', TRUE),
+(10, 'Parcial 3', TRUE);
 
 -- ============================
 -- 5. VISTAS
@@ -695,49 +807,3 @@ GRANT SELECT ON vista_historial TO rol_alumno;
 GRANT SELECT ON vista_promedios TO rol_alumno;
 GRANT EXECUTE ON FUNCTION fn_promedio_alumno(INT) TO rol_alumno;
 GRANT EXECUTE ON FUNCTION fn_estatus_alumno(INT) TO rol_alumno;
-
--- ============================
--- 12. PRUEBAS DE ACCESO POR ROL
--- ============================
-
--- ---- Pruebas de acceso PERMITIDO ----
--- (Ejecutar conectado como cada rol)
-
--- Como rol_admin: Puede hacer todo
--- SET ROLE rol_admin;
--- SELECT * FROM alumnos; -- ✅ Permitido
--- INSERT INTO alumnos (nombre, apellido, email) VALUES ('Test', 'Admin', 'test@admin.com'); -- ✅ Permitido
--- DELETE FROM alumnos WHERE email = 'test@admin.com'; -- ✅ Permitido
--- RESET ROLE;
-
--- Como rol_docente: SELECT alumnos, INSERT/UPDATE calificaciones
--- SET ROLE rol_docente;
--- SELECT * FROM alumnos; -- ✅ Permitido
--- SELECT * FROM vista_historial; -- ✅ Permitido
--- UPDATE calificaciones SET calificacion = 85 WHERE id_calificacion = 1; -- ✅ Permitido
--- RESET ROLE;
-
--- Como rol_alumno: Solo SELECT
--- SET ROLE rol_alumno;
--- SELECT * FROM vista_historial WHERE id_alumno = 1; -- ✅ Permitido
--- SELECT * FROM vista_promedios WHERE id_alumno = 1; -- ✅ Permitido
--- RESET ROLE;
-
--- ---- Pruebas de acceso DENEGADO ----
-
--- Como rol_docente: No puede DELETE ni INSERT en alumnos
--- SET ROLE rol_docente;
--- DELETE FROM alumnos WHERE id_alumno = 1; -- ❌ DENEGADO
--- INSERT INTO alumnos (nombre, apellido, email) VALUES ('X', 'Y', 'xy@test.com'); -- ❌ DENEGADO
--- RESET ROLE;
-
--- Como rol_alumno: No puede INSERT/UPDATE/DELETE en ninguna tabla
--- SET ROLE rol_alumno;
--- INSERT INTO calificaciones (id_inscripcion, calificacion, periodo_eval) VALUES (1, 100, 'Test'); -- ❌ DENEGADO
--- UPDATE alumnos SET nombre = 'Hack' WHERE id_alumno = 1; -- ❌ DENEGADO
--- DELETE FROM inscripciones WHERE id_inscripcion = 1; -- ❌ DENEGADO
--- RESET ROLE;
-
--- ============================================================
--- FIN DEL SCRIPT
--- ============================================================

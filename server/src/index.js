@@ -10,6 +10,7 @@ import gruposRoutes from './routes/grupos.routes.js';
 import inscripcionesRoutes from './routes/inscripciones.routes.js';
 import calificacionesRoutes from './routes/calificaciones.routes.js';
 import consultasRoutes from './routes/consultas.routes.js';
+import periodosDocenteRoutes from './routes/periodos_docente.routes.js';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use('/api/grupos', gruposRoutes);
 app.use('/api/inscripciones', inscripcionesRoutes);
 app.use('/api/calificaciones', calificacionesRoutes);
 app.use('/api/consultas', consultasRoutes);
+app.use('/api/periodos-docente', periodosDocenteRoutes);
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {

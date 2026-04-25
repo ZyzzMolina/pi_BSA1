@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     LayoutDashboard, Users, GraduationCap, BookOpen, Layers,
-    ClipboardList, FileText, BarChart3, LogOut, Menu, X, Shield
+    ClipboardList, FileText, BarChart3, LogOut, Menu, X, Shield, Lock
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -24,19 +24,16 @@ const Layout = () => {
         { to: '/admin/grupos', icon: Layers, label: 'Grupos' },
         { to: '/admin/inscripciones', icon: ClipboardList, label: 'Inscripciones' },
         { to: '/admin/calificaciones', icon: FileText, label: 'Calificaciones' },
+        { to: '/admin/periodos-docentes', icon: Lock, label: 'Períodos Docentes' },
         { to: '/admin/consultas', icon: BarChart3, label: 'Consultas' },
     ];
 
     const docenteLinks = [
         { to: '/docente', icon: LayoutDashboard, label: 'Dashboard', end: true },
-        { to: '/docente/grupos', icon: Layers, label: 'Mis Grupos' },
-        { to: '/docente/calificaciones', icon: FileText, label: 'Calificaciones' },
     ];
 
     const alumnoLinks = [
         { to: '/alumno', icon: LayoutDashboard, label: 'Dashboard', end: true },
-        { to: '/alumno/historial', icon: FileText, label: 'Historial' },
-        { to: '/alumno/promedios', icon: BarChart3, label: 'Promedios' },
     ];
 
     const links = user?.role === 'admin' ? adminLinks : user?.role === 'docente' ? docenteLinks : alumnoLinks;
